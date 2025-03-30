@@ -27,6 +27,12 @@ const sections = {
   ],
   Backstory: [],
   Personality: [],
+  Terminal: [
+    {
+      title: "System Terminal",
+      content: "Enter `help` to see available commands."
+    },
+  ],
 };
 
 export default function Dossier() {

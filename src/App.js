@@ -1,9 +1,10 @@
-// App.js - Snow fades fast and delays 2s before dossier
+// App.js - Updated with working terminal command, removed broken exit button
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Intro from './Intro';
 import MainTitle from './MainTitle';
 import Snowfall from './Snowfall';
+import Terminal from './Terminal';
 
 const sections = {
   Abilities: [
@@ -42,6 +43,12 @@ const sections = {
     {
       title: "Philosophy",
       content: "He believes strength without freedom is slavery. And he won’t let the higher-ups kill another kid under their rule.",
+    },
+  ],
+  Terminal: [
+    {
+      title: "System Terminal",
+      content: "Enter `help` to see available commands."
     },
   ],
 };
@@ -151,6 +158,12 @@ export default function App() {
     }, 40);
   };
 
+  const handleExitTerminal = () => {
+    setMenu(true);
+    setCategory(null);
+    setIndex(0);
+  };
+
   return (
     <div className="min-h-screen bg-black text-green-400 font-mono flex flex-col items-center justify-center px-6 py-12 relative">
       {(state === "intro" || state === "transitioning") && (
@@ -246,41 +259,45 @@ export default function App() {
                 })}
               </div>
             ) : currentSection && (
-              <motion.div
-                key={currentSection.title}
-                initial={{ opacity: 0, scale: 0.98 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.98 }}
-                transition={{ duration: 0.3 }}
-                className="w-full max-w-3xl flex flex-col items-center"
-              >
-                <motion.h2
-                  className="text-white text-2xl uppercase tracking-wide mb-4"
-                  initial={{ opacity: 0, y: -5 }}
-                  animate={{ opacity: 1, y: 0 }}
+              currentSection.title === "System Terminal" ? (
+                <Terminal onExit={handleExitTerminal} />
+              ) : (
+                <motion.div
+                  key={currentSection.title}
+                  initial={{ opacity: 0, scale: 0.98 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.98 }}
                   transition={{ duration: 0.3 }}
+                  className="w-full max-w-3xl flex flex-col items-center"
                 >
-                  {currentSection.title}
-                </motion.h2>
-
-                <div className="bg-zinc-900 border border-green-500 p-6 rounded-md w-full min-h-[160px] shadow-md mb-6">
-                  <motion.div
-                    key={displayedText}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.5 }}
+                  <motion.h2
+                    className="text-white text-2xl uppercase tracking-wide mb-4"
+                    initial={{ opacity: 0, y: -5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3 }}
                   >
-                    <pre className="whitespace-pre-wrap break-words">{displayedText}</pre>
-                  </motion.div>
-                </div>
+                    {currentSection.title}
+                  </motion.h2>
 
-                <button
-                  onClick={handleNext}
-                  className="px-6 py-2 bg-green-500 text-black rounded hover:bg-green-400 transition font-semibold"
-                >
-                  {index + 1 < sections[category].length ? "Next" : "Back to Menu"}
-                </button>
-              </motion.div>
+                  <div className="bg-zinc-900 border border-green-500 p-6 rounded-md w-full min-h-[160px] shadow-md mb-6">
+                    <motion.div
+                      key={displayedText}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.5 }}
+                    >
+                      <pre className="whitespace-pre-wrap break-words">{displayedText}</pre>
+                    </motion.div>
+                  </div>
+
+                  <button
+                    onClick={handleNext}
+                    className="px-6 py-2 bg-green-500 text-black rounded hover:bg-green-400 transition font-semibold"
+                  >
+                    {index + 1 < sections[category].length ? "Next" : "Back to Menu"}
+                  </button>
+                </motion.div>
+              )
             )}
           </motion.div>
         )}
