@@ -1,70 +1,52 @@
-import React, { useEffect, useState, useRef } from 'react';
-import Snowfall from './Snowfall';
-import { motion, AnimatePresence } from 'framer-motion';
+// Intro.jsx - Fix first line cut-in by ensuring fade logic applies on mount
+import { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
-const lines = [
-  "I don't know what a good person in life is....",
+const introLines = [
+  "I don't know what a good person in life is...",
   "But whoever that person is, I know it's not me.",
-  "But this time... maybe I can make it right.",
+  "But this time, maybe I can make it right."
 ];
 
 export default function Intro({ onFinish }) {
-  const [currentLine, setCurrentLine] = useState(0);
-  const [visible, setVisible] = useState(true);
-  const audioRef = useRef(null);
+  const [index, setIndex] = useState(0);
+  const [showLine, setShowLine] = useState(false);
 
   useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.volume = 0.2;
-      audioRef.current.loop = true;
-      audioRef.current.play().catch((e) => {
-        console.warn("Autoplay failed, user interaction required.", e);
-      });
-    }
-  }, []);
+    const fadeInStart = setTimeout(() => setShowLine(true), 100); // Ensures mount transition
 
-  useEffect(() => {
-    let fadeOutTimer, nextLineTimer;
-
-    if (visible) {
-      fadeOutTimer = setTimeout(() => setVisible(false), 3500); // Stay visible 3.5s
+    if (index < introLines.length) {
+      const lineTimer = setTimeout(() => {
+        setShowLine(false);
+        const nextTimer = setTimeout(() => {
+          setIndex((prev) => prev + 1);
+        }, 800);
+        return () => clearTimeout(nextTimer);
+      }, 3000);
+      return () => {
+        clearTimeout(lineTimer);
+        clearTimeout(fadeInStart);
+      };
     } else {
-      nextLineTimer = setTimeout(() => {
-        if (currentLine < lines.length - 1) {
-          setCurrentLine((prev) => prev + 1);
-          setVisible(true);
-        } else {
-          onFinish();
-        }
-      }, 1000); // 1s fade out time before next
+      const finishTimer = setTimeout(() => onFinish(), 1000);
+      return () => clearTimeout(finishTimer);
     }
-
-    return () => {
-      clearTimeout(fadeOutTimer);
-      clearTimeout(nextLineTimer);
-    };
-  }, [visible, currentLine, onFinish]);
+  }, [index]);
 
   return (
-    <div className="relative h-screen bg-black text-white flex items-center justify-center overflow-hidden">
-      <Snowfall />
-      <audio ref={audioRef} src="/bgm.mp3" autoPlay />
-
+    <div className="h-screen w-full flex items-center justify-center">
       <AnimatePresence mode="wait">
-        {visible && (
-          <motion.div
-            key={currentLine}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{
-              duration: 2,
-              ease: 'easeInOut',
-            }}
-            className="z-10 text-xl md:text-2xl text-center px-6 font-light"
+        {showLine && (
+          <motion.p
+            key={index}
+            className="text-white text-xl sm:text-2xl md:text-3xl font-light tracking-wide text-center px-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 2 }}
           >
-            {lines[currentLine]}
-          </motion.div>
+            {introLines[index]}
+          </motion.p>
         )}
       </AnimatePresence>
     </div>
