@@ -6,34 +6,44 @@ export default function Terminal({ onExit }) {
     "Type `help` to see available commands.",
   ]);
   const [input, setInput] = useState("");
-  const [locked, setLocked] = useState(true);
+  const [lastLogUnlocked, setLastLogUnlocked] = useState(false);
   const terminalRef = useRef(null);
+
+  const glitchText = () => {
+    const chars = "AM I?".split("");
+    return chars
+      .map((char) => (Math.random() < 0.2 ? String.fromCharCode(33 + Math.random() * 94) : char))
+      .join("");
+  };
+
+  const logEntries = {
+    "001": "TEXT.LOG.001",
+    "009": "TEXT.LOG.009",
+    "023": "TEXT.LOG.023",
+    "02%": "TEXT.LOG.02%",
+  };
+
+  const logContents = {
+    "001": "TEXT.LOG.001: \"Where did they go...Where am I...Who...Are you..?\"",
+    "009": "TEXT.LOG.009: \"W-What are you doing? Back off! Get the FUCK away from me you fuck!\"",
+    "023": "TEXT.LOG.023: \"...Who are you...? Where am I...? Who...-\"",
+    "02%": <span key="glitch" className="animate-pulse text-red-500">TEXT.LOG.02%: "{glitchText()}"</span>,
+  };
 
   const commands = {
     help: [
       "`help` - List commands",
-      "`access memories` - View a personal reflection",
-      "`unlock dossier` - Unlock classified records (password required)",
+      "`logs` - List available logs",
+      "`access log [id]` - View specific memory log (e.g. access log 001)",
       "`clear` - Clear terminal",
       "`exit` - Return to menu",
     ],
-    "access memories": [
-      "I'm sorry for what happened on that dreadful day..."
-    ],
-    "unlock dossier": () => {
-      const password = prompt("Enter password:");
-      if (password === "glitch") {
-        setLocked(false);
-        return ["Dossier Unlocked."];
-      } else {
-        return ["Access Denied."];
-      }
-    },
+    logs: Object.values(logEntries),
     clear: () => [],
     exit: () => {
-      onExit();
+      onExit?.();
       return [];
-    }
+    },
   };
 
   const handleCommand = () => {
@@ -41,7 +51,26 @@ export default function Terminal({ onExit }) {
     if (!trimmed) return;
 
     let output = [`> ${trimmed}`];
-    if (commands[trimmed]) {
+
+    if (trimmed.startsWith("access log")) {
+      const parts = trimmed.split(" ");
+      const logId = parts[2];
+      if (logContents[logId]) {
+        if (logId === "02%" && !lastLogUnlocked) {
+          const attempt = prompt("Access restricted. Enter password:");
+          if (attempt === "kernel.404") {
+            setLastLogUnlocked(true);
+            output.push(logContents[logId]);
+          } else {
+            output.push("Nice try.");
+          }
+        } else {
+          output.push(logContents[logId]);
+        }
+      } else {
+        output.push("Log not found.");
+      }
+    } else if (commands[trimmed]) {
       const response = commands[trimmed];
       const lines = typeof response === "function" ? response() : response;
       output = [...output, ...lines];
@@ -49,9 +78,7 @@ export default function Terminal({ onExit }) {
       output.push("Unrecognized command.");
     }
 
-    setHistory((prev) =>
-      trimmed === "clear" ? [] : [...prev, ...output]
-    );
+    setHistory((prev) => (trimmed === "clear" ? [] : [...prev, ...output]));
     setInput("");
   };
 
@@ -82,7 +109,6 @@ export default function Terminal({ onExit }) {
           />
         </div>
       </div>
-
     </div>
   );
 }
